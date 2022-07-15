@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { Button, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import { Avatar, ListItem } from "react-native-elements";
-const UserListItem = ({ id, chat, goToChat }) => {
+const UserListChatItem = ({ id, chat,JoinChat }) => {
   console.log("goToChat",chat);
   return (
-    <ListItem onPress={() => goToChat(id, chat)}>
+    <ListItem>
       <Avatar
         rounded
         icon={{ name: "user", type: "font-awesome" }}
@@ -14,8 +14,16 @@ const UserListItem = ({ id, chat, goToChat }) => {
         <ListItem.Title>{chat?.chatName}</ListItem.Title>
         <ListItem.Subtitle>{chat?.recent}</ListItem.Subtitle>
       </ListItem.Content>
+      <Button onPress={()=>JoinChat(id,chat)}title="Join"/>
     </ListItem>
+
   );
 };
 
-export default UserListItem;
+export default UserListChatItem;
+const styles = StyleSheet.create({
+    container: {
+      height: "100%",
+    },
+  });
+  

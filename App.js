@@ -5,12 +5,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Home from "./screens/home";
 import Login from "./screens/login";
 import Register from "./screens/register";
-import { useEffect } from "react";
 
 
 import AddChat from "./screens/AddChat";
 import ChatScreen from "./screens/ChatScreen";
 import JoinChat from "./screens/JoinChat";
+import RequestOnChat from "./screens/reqestOnChat";
 
 export default function App() {
   const Stack = createNativeStackNavigator();
@@ -29,6 +29,7 @@ export default function App() {
         <Stack.Screen name="AddChat" component={AddChat} />
         <Stack.Screen name="ChatScreen" component={ChatScreen} />
         <Stack.Screen name="JoinChat" component={JoinChat} />
+        <Stack.Screen name="Requests" component={RequestOnChat} />
       </Stack.Navigator>
     </NavigationContainer>
   );

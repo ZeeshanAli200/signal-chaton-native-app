@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
 import { Button, Image, Input } from "react-native-elements";
-import { auth, createUserWithEmailAndPassword } from "../firebase";
+import { auth, createUserWithEmailAndPassword, db,collection,addDoc } from "../firebase";
 const Register = ({ navigation }) => {
   const [register, setRegister] = useState({
     userName: "",
@@ -24,8 +24,15 @@ const Register = ({ navigation }) => {
   const handleRegister = () => {
     if (register?.userName && register?.email && register.password) {
       createUserWithEmailAndPassword(auth, register.email, register.password)
-        .then((resp) => {
+        .then(async(resp) => {
           resp.user.displayName = register.userName;
+          const refuser=collection(db,'users')
+          const addUser=await addDoc(refuser,{
+            email:register?.email,
+            userName:register?.userName,
+            uid:resp?.user?.uid
+          })
+
         })
         .catch((error) => {
           console.log(error);

@@ -15,7 +15,7 @@ import {
   serverTimestamp,
   doc,
   query,
-  orderBy,where,
+  orderBy,where,getDocs,
   updateDoc,
 } from "firebase/firestore";
 
@@ -46,7 +46,7 @@ export {
   auth,
   db,
   addDoc,
-  onSnapshot,
+  onSnapshot,getDocs,
   serverTimestamp,
   collection,
   setDoc,

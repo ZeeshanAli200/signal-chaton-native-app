@@ -41,7 +41,35 @@ const ChatScreen = ({ navigation, route }) => {
           </Text>
         </View>
       ),
+
       headerTintColor: "#fff",
+      headerRight: () =>
+        route?.params?.chatname?.createdBy === auth.currentUser?.uid && (
+          <View>
+            <TouchableOpacity
+              style={styles.notificationWrapper}
+              onPress={() =>
+                navigation.navigate("Requests", {
+                  chatid: route?.params?.id,
+                })
+              }
+            >
+              {route?.params?.chatname?.userRequests?.length ? (
+                <View style={styles.notificationTextWrapper}>
+                  <Text style={{ color: "#fff" }}>
+                    {route?.params?.chatname?.userRequests?.length}
+                  </Text>
+                </View>
+              ):(null)}
+
+              <Avatar
+                rounded
+                icon={{ name: "notification", type: "antdesign" }}
+                containerStyle={{ backgroundColor: "#2C6BED" }}
+              />
+            </TouchableOpacity>
+          </View>
+        ),
     });
   }, []);
   const handleSendMsg = async () => {
@@ -204,5 +232,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#ECECEC",
     borderRadius: 13,
     maxWidth: 200,
+  },
+  notificationWrapper: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "center",
+  },
+  notificationTextWrapper: {
+    backgroundColor: "red",
+    textAlign: "center",
+    borderRadius: 20,
+    height: 20,
+    width: 20,
+    position: "absolute",
+    right: 0,
+    zIndex: 2,
+
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

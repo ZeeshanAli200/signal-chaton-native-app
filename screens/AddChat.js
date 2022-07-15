@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button, Icon, Input } from "react-native-elements";
-import { db, addDoc, setDoc, collection, auth } from "../firebase";
+import { db, addDoc, setDoc, collection, auth ,doc,updateDoc} from "../firebase";
 
 const AddChat = ({ navigation }) => {
   const [chatName, setchatName] = useState("");
@@ -27,10 +27,15 @@ const AddChat = ({ navigation }) => {
           recent: "",
           userRequests:[],
           acceptedRequests:[],
-          createdBy:auth.currentUser.uid
+          createdBy:auth.currentUser.uid,
+          chatid:''
         });
         if (addChat) {
-          navigation.goBack();
+          const chatrefUpd=doc(db,'chats',addChat?.id)
+          const updid=await updateDoc(chatrefUpd,{
+            chatid:addChat?.id
+          })
+          navigation.goBack();          
         }
       } catch (error) {}
     }
