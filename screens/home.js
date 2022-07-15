@@ -3,12 +3,20 @@ import { Text, View, TouchableOpacity, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaView, ScrollView } from "react-native";
 import UserListItem from "../components/userListItem";
-import { Avatar, Button, Icon, ListItem } from "react-native-elements";
+import {
+  Avatar,
+  Button,
+  Icon,
+  ListItem,
+  Tab,
+  TabView,
+} from "react-native-elements";
 // import { ListItem } from "@rneui/themed";
 
 import { auth, db, signOut, collection, onSnapshot } from "../firebase";
 const Home = ({ navigation }) => {
   const [allchats, setallchats] = useState([]);
+  const [index, setIndex] = useState(0);
   useEffect(() => {
     navigation.setOptions({
       title: "Signal",
@@ -57,10 +65,7 @@ const Home = ({ navigation }) => {
       setallchats(
         querySnapshot?.docs?.map((doc) => {
           return { id: doc.id, chat: doc.data() };
-        }) ?.filter(
-          ({ chat }) =>chat?.createdBy===auth?.currentUser?.uid ||
-            chat?.acceptedRequests?.find((id) => id === auth.currentUser.uid)
-        )
+        })
       )
     );
     return unsubscribe;
@@ -80,13 +85,83 @@ const Home = ({ navigation }) => {
     });
   };
   return (
-    <SafeAreaView>
-      <ScrollView style={styles.container}>
-        {allchats?.map(({ id, chat }) => (
-          <UserListItem key={id} id={id} chat={chat} goToChat={goToChat} />
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+    //  <SafeAreaView>
+    //    <ScrollView style={styles.container}>
+    //     {allchats?.map(({ id, chat }) => (
+    //       <UserListItem key={id} id={id} chat={chat} goToChat={goToChat} />
+    //     ))}
+    //   </ScrollView>
+    <View style={{ flex: 1, justifyContent: "flex-end" }}>
+      <TabView value={index} onChange={setIndex} animationType="spring">
+        <TabView.Item style={{ width: "100%" }}>
+          <View>
+            <ScrollView style={styles.container}>
+              {allchats
+                ?.filter(
+                  ({ chat }) => chat?.createdBy === auth?.currentUser?.uid
+                  // ||
+                  // chat?.acceptedRequests?.find((id) => id === auth.currentUser.uid)
+                )
+                ?.map(({ id, chat }) => (
+                  <UserListItem
+                    key={id}
+                    id={id}
+                    chat={chat}
+                    goToChat={goToChat}
+                  />
+                ))}
+            </ScrollView>
+          </View>
+        </TabView.Item>
+        <TabView.Item style={{ width: "100%" }}>
+          <View>
+            {allchats
+              ?.filter(({ chat }) =>
+                chat?.acceptedRequests?.find(
+                  (id) => id === auth.currentUser.uid
+                )
+              )
+              ?.map(({ id, chat }) => (
+                <UserListItem
+                  key={id}
+                  id={id}
+                  chat={chat}
+                  goToChat={goToChat}
+                />
+              ))}
+          </View>
+        </TabView.Item>
+      </TabView>
+      <Tab
+        value={index}
+        onChange={(e) => setIndex(e)}
+        indicatorStyle={{
+          backgroundColor: "white",
+          height: 3,
+        }}
+        variant="primary"
+      >
+        <Tab.Item
+          containerStyle={{ backgroundColor: "#2C6BED" }}
+          title="My Chats"
+          titleStyle={{ fontSize: 12 }}
+          icon={{ name: "timer", type: "ionicon", color: "white" }}
+        />
+        <Tab.Item
+          containerStyle={{ backgroundColor: "#2C6BED" }}
+          title="Joined Chats"
+          titleStyle={{ fontSize: 12 }}
+          icon={{ name: "heart", type: "ionicon", color: "white" }}
+        />
+        {/* <Tab.Item
+            containerStyle={{ backgroundColor: "#2C6BED" }}
+            title="Accepted"
+            titleStyle={{ fontSize: 12 }}
+            icon={{ name: "cart", type: "ionicon", color: "white" }}
+          /> */}
+      </Tab>
+    </View>
+    // </SafeAreaView>
   );
 };
 

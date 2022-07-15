@@ -75,20 +75,23 @@ const ChatScreen = ({ navigation, route }) => {
   const handleSendMsg = async () => {
     try {
       if (msg) {
+
+        let msgtemp=msg
+        setmsg("");
         const messageRef = collection(db, `chats/${route.params.id}/message`);
         const addmsg = await addDoc(messageRef, {
           userName: auth.currentUser.displayName,
           timeStamp: serverTimestamp(),
           email: auth.currentUser.email,
-          message: msg,
+          message: msgtemp,
         });
         // console.log("addmsg",addmsg.);
 
         const latestChatRef = doc(db, "chats", route.params.id);
         await updateDoc(latestChatRef, {
-          recent: msg,
+          recent: msgtemp,
         });
-        setmsg("");
+        
       }
     } catch (error) {
       console.log("error", error);
