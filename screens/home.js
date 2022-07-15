@@ -85,12 +85,7 @@ const Home = ({ navigation }) => {
     });
   };
   return (
-    //  <SafeAreaView>
-    //    <ScrollView style={styles.container}>
-    //     {allchats?.map(({ id, chat }) => (
-    //       <UserListItem key={id} id={id} chat={chat} goToChat={goToChat} />
-    //     ))}
-    //   </ScrollView>
+   
     <View style={{ flex: 1, justifyContent: "flex-end" }}>
       <TabView value={index} onChange={setIndex} animationType="spring">
         <TabView.Item style={{ width: "100%" }}>
@@ -99,8 +94,7 @@ const Home = ({ navigation }) => {
               {allchats
                 ?.filter(
                   ({ chat }) => chat?.createdBy === auth?.currentUser?.uid
-                  // ||
-                  // chat?.acceptedRequests?.find((id) => id === auth.currentUser.uid)
+                 
                 )
                 ?.map(({ id, chat }) => (
                   <UserListItem
@@ -153,15 +147,9 @@ const Home = ({ navigation }) => {
           titleStyle={{ fontSize: 12 }}
           icon={{ name: "heart", type: "ionicon", color: "white" }}
         />
-        {/* <Tab.Item
-            containerStyle={{ backgroundColor: "#2C6BED" }}
-            title="Accepted"
-            titleStyle={{ fontSize: 12 }}
-            icon={{ name: "cart", type: "ionicon", color: "white" }}
-          /> */}
+       
       </Tab>
     </View>
-    // </SafeAreaView>
   );
 };
 
