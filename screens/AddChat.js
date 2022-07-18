@@ -41,16 +41,28 @@ const AddChat = ({ navigation }) => {
     }
   };
   return (
-    <View>
+    <View style={styles.addChatWrapper}>
+      <View style={styles.addChatInnerWrapper}>
       <Input
         onChangeText={(val) => setchatName(val)}
         leftIcon={<Icon name="wechat" type="antdesign" />}
         placeholder="Enter a Chat Name"
       />
       <Button onPress={handleAddChat} title={"Create New Chat"} />
+      </View>
     </View>
   );
 };
 
 export default AddChat;
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  addChatWrapper:{
+    flex:1,
+    justifyContent:"center",
+    alignItems:'center',
+   
+  },
+  addChatInnerWrapper:{
+    width:"70%"
+  }
+});

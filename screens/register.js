@@ -1,7 +1,14 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { KeyboardAvoidingView, StyleSheet, Text, View } from "react-native";
 import { Button, Image, Input } from "react-native-elements";
-import { auth, createUserWithEmailAndPassword, db,collection,addDoc } from "../firebase";
+import {
+  auth,
+  createUserWithEmailAndPassword,
+  db,
+  collection,
+  addDoc,
+  updateProfile,
+} from "../firebase";
 const Register = ({ navigation }) => {
   const [register, setRegister] = useState({
     userName: "",
@@ -21,22 +28,26 @@ const Register = ({ navigation }) => {
   const handleRegisterField = (key, value) => {
     setRegister({ ...register, [key]: value });
   };
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (register?.userName && register?.email && register.password) {
-      createUserWithEmailAndPassword(auth, register.email, register.password)
-        .then(async(resp) => {
-          resp.user.displayName = register.userName;
-          const refuser=collection(db,'users')
-          const addUser=await addDoc(refuser,{
-            email:register?.email,
-            userName:register?.userName,
-            uid:resp?.user?.uid
-          })
+      try {
+        const refuser = collection(db, "users");
+        const signup = await createUserWithEmailAndPassword(
+          auth,
+          register.email,
+          register.password
+        );
 
-        })
-        .catch((error) => {
-          console.log(error);
+        const displayNameResp = updateProfile(signup.user, {
+          displayName: register?.userName,
         });
+
+        const addUser = await addDoc(refuser, {
+          email: register?.email,
+          userName: register?.userName,
+          uid: signup?.user?.uid,
+        });
+      } catch (error) {}
     }
   };
 

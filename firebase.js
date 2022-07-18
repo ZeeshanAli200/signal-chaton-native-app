@@ -4,7 +4,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
+  signOut,updateProfile
 } from "firebase/auth";
 import {
   getFirestore,
@@ -56,6 +56,6 @@ export {
   signOut,
   doc,
   query,
-  orderBy,
+  orderBy,updateProfile,
   updateDoc,where
 };

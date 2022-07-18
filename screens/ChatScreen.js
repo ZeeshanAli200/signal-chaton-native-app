@@ -22,10 +22,11 @@ import {
   query,
   updateDoc,
 } from "../firebase";
+import { ActivityIndicator } from "react-native";
 const ChatScreen = ({ navigation, route }) => {
   const scrollViewRef = useRef();
   const [msg, setmsg] = useState("");
-  const [allmsgs, setallmsgs] = useState(null);
+  const [allmsgs, setallmsgs] = useState({isLoading:true,allmsg:[]});
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitleAlign: "left",
@@ -75,7 +76,7 @@ const ChatScreen = ({ navigation, route }) => {
   const handleSendMsg = async () => {
     try {
       if (msg) {
-
+        console.log("displayname",auth.currentUser);
         let msgtemp=msg
         setmsg("");
         const messageRef = collection(db, `chats/${route.params.id}/message`);
@@ -104,9 +105,9 @@ const ChatScreen = ({ navigation, route }) => {
     );
     const unsubscribe = onSnapshot(ref, (querySnapshot) =>
       setallmsgs(
-        querySnapshot?.docs?.map((doc) => {
+        {isLoading:false,allmsg:querySnapshot?.docs?.map((doc) => {
           return { ...doc.data() };
-        })
+        })}
       )
     );
     return unsubscribe;
@@ -114,51 +115,73 @@ const ChatScreen = ({ navigation, route }) => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar style={"light"} />
-      <KeyboardAvoidingView style={styles.container}>
-        <ScrollView
-          style={styles.scrollContainer}
-          ref={scrollViewRef}
-          onContentSizeChange={() =>
-            scrollViewRef.current.scrollToEnd({ animated: true })
-          }
-        >
-          {allmsgs?.map(({ userName, timeStamp, email, message }, indx) =>
-            email === auth.currentUser.email ? (
-              <View style={styles.receiver} key={indx}>
-                <Text style={styles.receiverText}>{message}</Text>
-                <Avatar
-                  rounded
-                  size={24}
-                  icon={{ name: "user", type: "font-awesome" }}
-                  containerStyle={{ backgroundColor: "#2C6BED" }}
-                />
-              </View>
-            ) : (
-              <View style={styles.sender} key={indx}>
-                <Avatar
-                  size={24}
-                  rounded
-                  icon={{ name: "user", type: "font-awesome" }}
-                  containerStyle={{ backgroundColor: "#2C6BED" }}
-                />
-                <Text style={styles.sendText}>{message}</Text>
-              </View>
-            )
-          )}
-        </ScrollView>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.inputstyle}
-            onChangeText={(val) => setmsg(val)}
-            placeholder="Enter Message"
-            value={msg}
-            onSubmitEditing={handleSendMsg}
-          />
-          <TouchableOpacity onPress={handleSendMsg}>
-            <Ionicons name="send" color={"#2C6BED"} size={24} />
-          </TouchableOpacity>
+      {
+        allmsgs?.isLoading?(
+          <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
+          <ActivityIndicator color={"#2C6BED"} size="large"/>
+          </View>
+        ):(
+          <KeyboardAvoidingView style={styles.container}>
+          <ScrollView
+            style={styles.scrollContainer}
+            ref={scrollViewRef}
+            onContentSizeChange={() =>
+              scrollViewRef.current.scrollToEnd({ animated: true })
+            }
+          >
+            {allmsgs?.allmsg?.map(({ userName, timeStamp, email, message }, indx) =>
+              email === auth.currentUser.email ? (
+                <View style={styles.receiver} key={indx}>
+                  <View style={styles.receiverTextWrapper}>
+                 
+                  <Text style={styles.receiverText}>
+                  
+                    {message}</Text>
+                    </View>
+                  <Avatar
+                    rounded
+                    size={24}
+                    icon={{ name: "user", type: "font-awesome" }}
+                    containerStyle={{ backgroundColor: "#2C6BED" }}
+                  />
+                </View>
+              ) : (
+                <View style={styles.sender} key={indx}>
+                  <Avatar
+                    size={24}
+                    rounded
+                    icon={{ name: "user", type: "font-awesome" }}
+                    containerStyle={{ backgroundColor: "#2C6BED" }}
+                  />
+                  <View style={styles.sendTextWrapper}>
+                    <Text style={styles.sendText}>{userName}</Text>
+                  <Text >{message}</Text>
+                  </View>
+                </View>
+              )
+            )}
+          </ScrollView>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.inputstyle}
+              onChangeText={(val) => setmsg(val)}
+              placeholder="Enter Message"
+              value={msg}
+              onSubmitEditing={handleSendMsg}
+            />
+            <TouchableOpacity onPress={handleSendMsg}>
+              <Ionicons name="send" color={"#2C6BED"} size={24} />
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+        )
+      }
+      {/* {
+        <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
+        <ActivityIndicator color={"#2C6BED"} size="large"/>
         </View>
-      </KeyboardAvoidingView>
+      } */}
+     
     </SafeAreaView>
   );
 };
@@ -207,12 +230,23 @@ const styles = StyleSheet.create({
 
     alignItems: "center",
 
-    marginBottom: 5,
+    marginBottom: 10,
     justifyContent: "flex-end",
     // position:"relative"
     // backgroundColor:"beige",
   },
   receiverText: {
+    
+    // padding: 10,
+    // paddingHorizontal: 20,
+    // backgroundColor: "#ECECEC",
+    // borderRadius: 13,
+    // maxWidth: 200,
+    // marginRight: 5,
+    // fontWeight:"bold"
+  },
+  receiverTextWrapper: {
+    
     padding: 10,
     paddingHorizontal: 20,
     backgroundColor: "#ECECEC",
@@ -226,11 +260,22 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
     alignItems: "center",
     paddingHorizontal: 15,
-    marginBottom: 5,
+    marginBottom: 10,
   },
   sendText: {
+    // marginLeft: 5,
+    // padding: 10,
+    // paddingHorizontal: 20,
+    // backgroundColor: "#ECECEC",
+    // borderRadius: 13,
+    // maxWidth: 200,
+    color:"grey",
+    fontSize:12
+
+  },
+  sendTextWrapper: {
     marginLeft: 5,
-    padding: 10,
+    paddingVertical: 5,
     paddingHorizontal: 20,
     backgroundColor: "#ECECEC",
     borderRadius: 13,

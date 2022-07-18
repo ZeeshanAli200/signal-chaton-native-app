@@ -1,6 +1,7 @@
 import { async } from "@firebase/util";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
+  ActivityIndicator,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -25,9 +26,12 @@ import {
 } from "../firebase";
 
 const JoinChat = ({ navigation }) => {
-  const [allchats, setallchats] = useState([]);
-  const [reqchats, setreqchats] = useState([]);
-  const [acceptedChats, setacceptedChats] = useState([]);
+  const [allchats, setallchats] = useState({ isloading: true, allchat: [] });
+  const [reqchats, setreqchats] = useState({ isloading: true, reqchat: [] });
+  const [acceptedChats, setacceptedChats] = useState({
+    isloading: true,
+    acceptedChat: [],
+  });
   const [index, setIndex] = useState(0);
 
   useLayoutEffect(() => {
@@ -42,47 +46,46 @@ const JoinChat = ({ navigation }) => {
       ref,
       where("createdBy", "!=", auth?.currentUser?.uid)
     );
-    const unsubscribe = onSnapshot(queryChats, (querySnapshot) =>
-    {
-      if(index===0){
-        return setallchats(
-          querySnapshot?.docs
+    const unsubscribe = onSnapshot(queryChats, (querySnapshot) => {
+      if (index === 0) {
+        return setallchats({
+          isloading: false,
+          allchats: querySnapshot?.docs
             ?.map((doc) => {
               return { id: doc.id, chat: doc.data() };
             })
             ?.filter(
               ({ chat }) =>
-                !chat?.userRequests.find((id) => id === auth.currentUser.uid)&&!chat?.acceptedRequests.find((id) => id === auth.currentUser.uid)
-            )
-        )
-      }else if(index===1){
-        return setreqchats(
-          querySnapshot?.docs
+                !chat?.userRequests.find((id) => id === auth.currentUser.uid) &&
+                !chat?.acceptedRequests.find(
+                  (id) => id === auth.currentUser.uid
+                )
+            ),
+        });
+      } else if (index === 1) {
+        return setreqchats({
+          isloading: false,
+          reqchat: querySnapshot?.docs
             ?.map((doc) => {
               return { id: doc.id, chat: doc.data() };
             })
-            ?.filter(
-              ({ chat }) =>
-                chat?.userRequests.find((id) => id === auth.currentUser.uid)
-            )
-        )  
-      }else if(index===2){
-        return setacceptedChats(
-          querySnapshot?.docs
+            ?.filter(({ chat }) =>
+              chat?.userRequests.find((id) => id === auth.currentUser.uid)
+            ),
+        });
+      } else if (index === 2) {
+        return setacceptedChats({
+          isloading: false,
+          acceptedChat: querySnapshot?.docs
             ?.map((doc) => {
               return { id: doc.id, chat: doc.data() };
             })
-            ?.filter(
-              ({ chat }) =>
-                chat?.acceptedRequests.find((id) => id === auth.currentUser.uid)
-            )
-        )  
+            ?.filter(({ chat }) =>
+              chat?.acceptedRequests.find((id) => id === auth.currentUser.uid)
+            ),
+        });
       }
-      
-    }
-      
-     
-    );
+    });
     return unsubscribe;
   }, [index]);
   const JoinChat = async (id, chat) => {
@@ -93,9 +96,9 @@ const JoinChat = ({ navigation }) => {
   };
   const CancelJoin = async (id, chat) => {
     const reqRef = doc(db, `chats/${id}`);
-    let cloneReqArr=[...chat?.userRequests]
-    let indexReq=cloneReqArr.indexOf(auth.currentUser.uid)
-    cloneReqArr.splice(indexReq,1)
+    let cloneReqArr = [...chat?.userRequests];
+    let indexReq = cloneReqArr.indexOf(auth.currentUser.uid);
+    cloneReqArr.splice(indexReq, 1);
     const updReqField = await updateDoc(reqRef, {
       userRequests: [...cloneReqArr],
     });
@@ -103,61 +106,99 @@ const JoinChat = ({ navigation }) => {
 
   console.log("allchats", acceptedChats);
   return (
-    <>
+    <View style={{ flex: 1, justifyContent: "flex-end" }}>
+      <TabView value={index} onChange={setIndex} animationType="spring">
+        <TabView.Item style={{ width: "100%" }}>
+          {allchats?.isloading ? (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ActivityIndicator color={"#2C6BED"} size="large" />
+            </View>
+          ) : (
+            <View>
+              {allchats?.allchat?.map(({ id, chat }) => (
+                <UserListChatItem id={id} chat={chat} JoinChat={JoinChat} />
+              ))}
+            </View>
+          )}
+        </TabView.Item>
+        <TabView.Item style={{ width: "100%" }}>
+          {acceptedChats?.isloading ? (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ActivityIndicator color={"#2C6BED"} size="large" />
+            </View>
+          ) : (
+            <View>
+              {reqchats?.reqchat?.map(({ id, chat }) => (
+                <RequestedListChatItem
+                  id={id}
+                  chat={chat}
+                  CancelJoin={CancelJoin}
+                />
+              ))}
+            </View>
+          )}
+        </TabView.Item>
+        <TabView.Item style={{ width: "100%" }}>
+          {acceptedChats?.isloading ? (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ActivityIndicator color={"#2C6BED"} size="large" />
+            </View>
+          ) : (
+            <View>
+              {acceptedChats?.acceptedChat?.map(({ id, chat }) => (
+                <AcceptedListChatItem id={id} chat={chat} />
+              ))}
+            </View>
+          )}
+        </TabView.Item>
+      </TabView>
       <Tab
         value={index}
         onChange={(e) => setIndex(e)}
         indicatorStyle={{
-          backgroundColor: "white",
+          backgroundColor: "#2C6BED",
           height: 3,
         }}
         variant="primary"
       >
         <Tab.Item
-          containerStyle={{ backgroundColor: "#2C6BED" }}
+          containerStyle={{ backgroundColor: "#fff" }}
           title="Join Chats"
-          titleStyle={{ fontSize: 12 }}
-          icon={{ name: "timer", type: "ionicon", color: "white" }}
+          titleStyle={{ fontSize: 12, color: "#2C6BED" }}
+          icon={{ name: "timer", type: "ionicon", color: "#2C6BED" }}
         />
         <Tab.Item
-          containerStyle={{ backgroundColor: "#2C6BED" }}
+          containerStyle={{ backgroundColor: "#fff" }}
           title="Requested"
-          titleStyle={{ fontSize: 12 }}
-          icon={{ name: "heart", type: "ionicon", color: "white" }}
+          titleStyle={{ fontSize: 12, color: "#2C6BED" }}
+          icon={{ name: "heart", type: "ionicon", color: "#2C6BED" }}
         />
         <Tab.Item
-          containerStyle={{ backgroundColor: "#2C6BED" }}
+          containerStyle={{ backgroundColor: "#fff" }}
           title="Accepted"
-          titleStyle={{ fontSize: 12 }}
-          icon={{ name: "cart", type: "ionicon", color: "white" }}
+          titleStyle={{ fontSize: 12, color: "#2C6BED" }}
+          icon={{ name: "cart", type: "ionicon", color: "#2C6BED" }}
         />
       </Tab>
-      <TabView value={index} onChange={setIndex} animationType="spring">
-        <TabView.Item style={{ width: "100%" }}>
-          <View>
-            {allchats?.map(({ id, chat }) => (
-              <UserListChatItem id={id} chat={chat} JoinChat={JoinChat}/>
-            ))}
-          </View>
-        </TabView.Item>
-        <TabView.Item style={{  width: "100%" }}>
-        <View>
-        {reqchats?.map(({ id, chat }) => (
-              <RequestedListChatItem id={id} chat={chat} CancelJoin={CancelJoin}/>
-            ))}
-            </View>
-        </TabView.Item>
-        <TabView.Item style={{  width: "100%" }}>
-         <View>
-          {
-            acceptedChats?.map(({ id, chat }) => (
-              <AcceptedListChatItem id={id} chat={chat} />
-            ))}
-          
-         </View>
-        </TabView.Item>
-      </TabView>
-    </>
+    </View>
   );
 };
 
