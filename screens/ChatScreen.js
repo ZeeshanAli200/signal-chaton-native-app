@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { View } from "react-native";
-import { Avatar } from "react-native-elements";
+import { Avatar, Input } from "react-native-elements";
 import { color } from "react-native-elements/dist/helpers";
 import {
   db,
@@ -23,10 +23,12 @@ import {
   updateDoc,
 } from "../firebase";
 import { ActivityIndicator } from "react-native";
+
 const ChatScreen = ({ navigation, route }) => {
   const scrollViewRef = useRef();
   const [msg, setmsg] = useState("");
-  const [allmsgs, setallmsgs] = useState({isLoading:true,allmsg:[]});
+  const [allmsgs, setallmsgs] = useState({ isLoading: true, allmsg: [] });
+  const [searchMsg, setsearchMsg] = useState(false);
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitleAlign: "left",
@@ -44,9 +46,9 @@ const ChatScreen = ({ navigation, route }) => {
       ),
 
       headerTintColor: "#fff",
-      headerRight: () =>
-        route?.params?.chatname?.createdBy === auth.currentUser?.uid && (
-          <View>
+      headerRight: () => (
+        <View style={{display:"flex",flexDirection:"row",alignItems:'center'}}>
+          {route?.params?.chatname?.createdBy === auth.currentUser?.uid && (
             <TouchableOpacity
               style={styles.notificationWrapper}
               onPress={() =>
@@ -61,7 +63,7 @@ const ChatScreen = ({ navigation, route }) => {
                     {route?.params?.chatname?.userRequests?.length}
                   </Text>
                 </View>
-              ):(null)}
+              ) : null}
 
               <Avatar
                 rounded
@@ -69,15 +71,43 @@ const ChatScreen = ({ navigation, route }) => {
                 containerStyle={{ backgroundColor: "#2C6BED" }}
               />
             </TouchableOpacity>
-          </View>
-        ),
+          )}
+          
+          <TouchableOpacity
+            // style={styles.notificationWrapper}
+            onPress={() =>
+             setsearchMsg(!searchMsg)
+            }
+          >
+            { !searchMsg ? (
+              <Avatar
+                rounded
+                icon={{ name: "search", type: "font-awesome" }}
+                containerStyle={{ backgroundColor: "#2C6BED" }}
+              />
+            ) : (
+              
+              <View style={{ flexDirection:'row'}}>
+                {/* <Input placeholder="search"/> */}
+              <Text style={{ fontWeight: "bold", fontSize: 16, color: "#fff" }}>
+                {" "}
+                X
+              </Text>
+              </View>
+            )}
+
+         
+          </TouchableOpacity>
+        </View>
+      ),
     });
-  }, []);
+  }, [searchMsg]);
+  console.log("searchMsg",searchMsg);
   const handleSendMsg = async () => {
     try {
       if (msg) {
-        console.log("displayname",auth.currentUser);
-        let msgtemp=msg
+        console.log("displayname", auth.currentUser);
+        let msgtemp = msg;
         setmsg("");
         const messageRef = collection(db, `chats/${route.params.id}/message`);
         const addmsg = await addDoc(messageRef, {
@@ -92,7 +122,6 @@ const ChatScreen = ({ navigation, route }) => {
         await updateDoc(latestChatRef, {
           recent: msgtemp,
         });
-        
       }
     } catch (error) {
       console.log("error", error);
@@ -104,24 +133,26 @@ const ChatScreen = ({ navigation, route }) => {
       orderBy("timeStamp", "asc")
     );
     const unsubscribe = onSnapshot(ref, (querySnapshot) =>
-      setallmsgs(
-        {isLoading:false,allmsg:querySnapshot?.docs?.map((doc) => {
+      setallmsgs({
+        isLoading: false,
+        allmsg: querySnapshot?.docs?.map((doc) => {
           return { ...doc.data() };
-        })}
-      )
+        }),
+      })
     );
     return unsubscribe;
   }, []);
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <StatusBar style={"light"} />
-      {
-        allmsgs?.isLoading?(
-          <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
-          <ActivityIndicator color={"#2C6BED"} size="large"/>
-          </View>
-        ):(
-          <KeyboardAvoidingView style={styles.container}>
+      {allmsgs?.isLoading ? (
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <ActivityIndicator color={"#2C6BED"} size="large" />
+        </View>
+      ) : (
+        <KeyboardAvoidingView style={styles.container}>
           <ScrollView
             style={styles.scrollContainer}
             ref={scrollViewRef}
@@ -129,36 +160,34 @@ const ChatScreen = ({ navigation, route }) => {
               scrollViewRef.current.scrollToEnd({ animated: true })
             }
           >
-            {allmsgs?.allmsg?.map(({ userName, timeStamp, email, message }, indx) =>
-              email === auth.currentUser.email ? (
-                <View style={styles.receiver} key={indx}>
-                  <View style={styles.receiverTextWrapper}>
-                 
-                  <Text style={styles.receiverText}>
-                  
-                    {message}</Text>
+            {allmsgs?.allmsg?.map(
+              ({ userName, timeStamp, email, message }, indx) =>
+                email === auth.currentUser.email ? (
+                  <View style={styles.receiver} key={indx}>
+                    <View style={styles.receiverTextWrapper}>
+                      <Text style={styles.receiverText}>{message}</Text>
                     </View>
-                  <Avatar
-                    rounded
-                    size={24}
-                    icon={{ name: "user", type: "font-awesome" }}
-                    containerStyle={{ backgroundColor: "#2C6BED" }}
-                  />
-                </View>
-              ) : (
-                <View style={styles.sender} key={indx}>
-                  <Avatar
-                    size={24}
-                    rounded
-                    icon={{ name: "user", type: "font-awesome" }}
-                    containerStyle={{ backgroundColor: "#2C6BED" }}
-                  />
-                  <View style={styles.sendTextWrapper}>
-                    <Text style={styles.sendText}>{userName}</Text>
-                  <Text >{message}</Text>
+                    <Avatar
+                      rounded
+                      size={24}
+                      icon={{ name: "user", type: "font-awesome" }}
+                      containerStyle={{ backgroundColor: "#2C6BED" }}
+                    />
                   </View>
-                </View>
-              )
+                ) : (
+                  <View style={styles.sender} key={indx}>
+                    <Avatar
+                      size={24}
+                      rounded
+                      icon={{ name: "user", type: "font-awesome" }}
+                      containerStyle={{ backgroundColor: "#2C6BED" }}
+                    />
+                    <View style={styles.sendTextWrapper}>
+                      <Text style={styles.sendText}>{userName}</Text>
+                      <Text>{message}</Text>
+                    </View>
+                  </View>
+                )
             )}
           </ScrollView>
           <View style={styles.inputContainer}>
@@ -174,14 +203,12 @@ const ChatScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
-        )
-      }
+      )}
       {/* {
         <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
         <ActivityIndicator color={"#2C6BED"} size="large"/>
         </View>
       } */}
-     
     </SafeAreaView>
   );
 };
@@ -236,7 +263,6 @@ const styles = StyleSheet.create({
     // backgroundColor:"beige",
   },
   receiverText: {
-    
     // padding: 10,
     // paddingHorizontal: 20,
     // backgroundColor: "#ECECEC",
@@ -246,7 +272,6 @@ const styles = StyleSheet.create({
     // fontWeight:"bold"
   },
   receiverTextWrapper: {
-    
     padding: 10,
     paddingHorizontal: 20,
     backgroundColor: "#ECECEC",
@@ -269,9 +294,8 @@ const styles = StyleSheet.create({
     // backgroundColor: "#ECECEC",
     // borderRadius: 13,
     // maxWidth: 200,
-    color:"grey",
-    fontSize:12
-
+    color: "grey",
+    fontSize: 12,
   },
   sendTextWrapper: {
     marginLeft: 5,

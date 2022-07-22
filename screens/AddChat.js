@@ -1,43 +1,21 @@
 import React, { useLayoutEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button, Icon, Input } from "react-native-elements";
+import { useDispatch } from "react-redux";
 import { db, addDoc, setDoc, collection, auth ,doc,updateDoc} from "../firebase";
+import { addNewChats } from "../redux/reducers/mychats";
 
 const AddChat = ({ navigation }) => {
   const [chatName, setchatName] = useState("");
   useLayoutEffect(() => {
     navigation.setOptions({
       title: "Add a New Chat",
-      headerRight:()=>(
-        <TouchableOpacity onPress={()=>navigation.navigate('JoinChat')}>
-          <Icon name="adduser" color={'white'} type="antdesign" />
-        </TouchableOpacity>
-          
-      ),
-      headerTintColor: "#fff",
-      
     });
   }, []);
-  const handleAddChat = async () => {
+  const dispatch=useDispatch()
+  const handleAddChat = () => {
     if (chatName) {
-      try {
-        const chatRef = collection(db, "chats");
-        const addChat = await addDoc(chatRef, {
-          chatName: chatName,
-          recent: "",
-          userRequests:[],
-          acceptedRequests:[],
-          createdBy:auth.currentUser.uid,
-          chatid:''
-        });
-        if (addChat) {
-          const chatrefUpd=doc(db,'chats',addChat?.id)
-          const updid=await updateDoc(chatrefUpd,{
-            chatid:addChat?.id
-          })
-          navigation.goBack();          
-        }
-      } catch (error) {}
+        dispatch(addNewChats(navigation,chatName))
     }
   };
   return (

@@ -1,4 +1,6 @@
 import { async } from "@firebase/util";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,7 +11,14 @@ import {
   Text,
 } from "react-native";
 import { View } from "react-native";
-import { Avatar, Button, ListItem, Tab, TabView } from "react-native-elements";
+import {
+  Avatar,
+  Button,
+  Icon,
+  ListItem,
+  Tab,
+  TabView,
+} from "react-native-elements";
 import AcceptedListChatItem from "../components/joinchatcomponents/acceptedListChat";
 import RequestedListChatItem from "../components/joinchatcomponents/requestedListChat";
 import UserListChatItem from "../components/joinchatcomponents/userlistchat";
@@ -24,22 +33,56 @@ import {
   query,
   where,
 } from "../firebase";
+import DrawerHome from "./DrawerHomeNavigations/drawer-home";
+import Home from "./home";
 
 const JoinChat = ({ navigation }) => {
-  const [allchats, setallchats] = useState({ isloading: true, allchat: [] });
-  const [reqchats, setreqchats] = useState({ isloading: true, reqchat: [] });
-  const [acceptedChats, setacceptedChats] = useState({
-    isloading: true,
-    acceptedChat: [],
-  });
-  const [index, setIndex] = useState(0);
+  const Tab = createMaterialBottomTabNavigator();
+  const Drawer = createDrawerNavigator();
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: "Join Chat",
-      headerTintColor: "#fff",
-    });
-  }, []);
+  return (
+    <Drawer.Navigator initialRouteName="Join Chats">
+      <Drawer.Screen name="Home" component={DrawerHome} options={{headerShown:false}} />
+      <Drawer.Screen name="Join Chats" component={JoinChats} />
+      <Drawer.Screen name="Requested" component={Requested} />
+      <Drawer.Screen name="Accepted" component={Accepted}  />
+    </Drawer.Navigator>
+    // <Tab.Navigator>
+    //   <Tab.Screen
+    //     name="Join Chats"
+    //     component={JoinChats}
+    //     options={{
+    //       tabBarIcon: () => (
+    //         <Icon name="wechat" type="antdesign" color={"#fff"} />
+    //       ),
+    //     }}
+    //   />
+
+    //   <Tab.Screen
+    //     name="Requested"
+    //     options={{
+    //       tabBarIcon: () => (
+    //         <Icon name="adduser" type="antdesign" color={"#fff"} />
+    //       ),
+    //     }}
+    //     component={Requested}
+    //   />
+    //    <Tab.Screen
+    //     name="Accepted"
+    //     options={{
+    //       tabBarIcon: () => (
+    //         <Icon name="adduser" type="antdesign" color={"#fff"} />
+    //       ),
+    //     }}
+    //     component={Accepted}
+    //   />
+    // </Tab.Navigator>
+  );
+};
+
+export const JoinChats = ({ navigation }) => {
+  const [allchats, setallchats] = useState({ isloading: true, allchat: [] });
+
   useEffect(() => {
     const ref = collection(db, "chats");
     const queryChats = query(
@@ -47,53 +90,75 @@ const JoinChat = ({ navigation }) => {
       where("createdBy", "!=", auth?.currentUser?.uid)
     );
     const unsubscribe = onSnapshot(queryChats, (querySnapshot) => {
-      if (index === 0) {
-        return setallchats({
-          isloading: false,
-          allchats: querySnapshot?.docs
-            ?.map((doc) => {
-              return { id: doc.id, chat: doc.data() };
-            })
-            ?.filter(
-              ({ chat }) =>
-                !chat?.userRequests.find((id) => id === auth.currentUser.uid) &&
-                !chat?.acceptedRequests.find(
-                  (id) => id === auth.currentUser.uid
-                )
-            ),
-        });
-      } else if (index === 1) {
-        return setreqchats({
-          isloading: false,
-          reqchat: querySnapshot?.docs
-            ?.map((doc) => {
-              return { id: doc.id, chat: doc.data() };
-            })
-            ?.filter(({ chat }) =>
-              chat?.userRequests.find((id) => id === auth.currentUser.uid)
-            ),
-        });
-      } else if (index === 2) {
-        return setacceptedChats({
-          isloading: false,
-          acceptedChat: querySnapshot?.docs
-            ?.map((doc) => {
-              return { id: doc.id, chat: doc.data() };
-            })
-            ?.filter(({ chat }) =>
-              chat?.acceptedRequests.find((id) => id === auth.currentUser.uid)
-            ),
-        });
-      }
+      return setallchats({
+        isloading: false,
+        allchat: querySnapshot?.docs
+          ?.map((doc) => {
+            return { id: doc.id, chat: doc.data() };
+          })
+          ?.filter(
+            ({ chat }) =>
+              !chat?.userRequests.find((id) => id === auth.currentUser.uid) &&
+              !chat?.acceptedRequests.find((id) => id === auth.currentUser.uid)
+          ),
+      });
     });
     return unsubscribe;
-  }, [index]);
+  }, []);
   const JoinChat = async (id, chat) => {
     const reqRef = doc(db, `chats/${id}`);
     const updReqField = await updateDoc(reqRef, {
       userRequests: [...chat?.userRequests, auth.currentUser.uid],
     });
   };
+
+  return (
+    <View style={{ flex: 1 }}>
+      {allchats?.isloading ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator color={"#2C6BED"} size="large" />
+        </View>
+      ) : (
+        <View>
+          {allchats?.allchat?.map(({ id, chat }) => (
+            <UserListChatItem id={id} chat={chat} JoinChat={JoinChat} />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
+
+export const Requested = ({ navigation }) => {
+  const [reqchats, setreqchats] = useState({ isloading: true, reqchat: [] });
+
+  useEffect(() => {
+    const ref = collection(db, "chats");
+    const queryChats = query(
+      ref,
+      where("createdBy", "!=", auth?.currentUser?.uid)
+    );
+    const unsubscribe = onSnapshot(queryChats, (querySnapshot) => {
+      return setreqchats({
+        isloading: false,
+        reqchat: querySnapshot?.docs
+          ?.map((doc) => {
+            return { id: doc.id, chat: doc.data() };
+          })
+          ?.filter(({ chat }) =>
+            chat?.userRequests.find((id) => id === auth.currentUser.uid)
+          ),
+      });
+    });
+    return unsubscribe;
+  }, []);
+
   const CancelJoin = async (id, chat) => {
     const reqRef = doc(db, `chats/${id}`);
     let cloneReqArr = [...chat?.userRequests];
@@ -103,105 +168,80 @@ const JoinChat = ({ navigation }) => {
       userRequests: [...cloneReqArr],
     });
   };
-
-  console.log("allchats", acceptedChats);
   return (
-    <View style={{ flex: 1, justifyContent: "flex-end" }}>
-      <TabView value={index} onChange={setIndex} animationType="spring">
-        <TabView.Item style={{ width: "100%" }}>
-          {allchats?.isloading ? (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ActivityIndicator color={"#2C6BED"} size="large" />
-            </View>
-          ) : (
-            <View>
-              {allchats?.allchat?.map(({ id, chat }) => (
-                <UserListChatItem id={id} chat={chat} JoinChat={JoinChat} />
-              ))}
-            </View>
-          )}
-        </TabView.Item>
-        <TabView.Item style={{ width: "100%" }}>
-          {acceptedChats?.isloading ? (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ActivityIndicator color={"#2C6BED"} size="large" />
-            </View>
-          ) : (
-            <View>
-              {reqchats?.reqchat?.map(({ id, chat }) => (
-                <RequestedListChatItem
-                  id={id}
-                  chat={chat}
-                  CancelJoin={CancelJoin}
-                />
-              ))}
-            </View>
-          )}
-        </TabView.Item>
-        <TabView.Item style={{ width: "100%" }}>
-          {acceptedChats?.isloading ? (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <ActivityIndicator color={"#2C6BED"} size="large" />
-            </View>
-          ) : (
-            <View>
-              {acceptedChats?.acceptedChat?.map(({ id, chat }) => (
-                <AcceptedListChatItem id={id} chat={chat} />
-              ))}
-            </View>
-          )}
-        </TabView.Item>
-      </TabView>
-      <Tab
-        value={index}
-        onChange={(e) => setIndex(e)}
-        indicatorStyle={{
-          backgroundColor: "#2C6BED",
-          height: 3,
-        }}
-        variant="primary"
-      >
-        <Tab.Item
-          containerStyle={{ backgroundColor: "#fff" }}
-          title="Join Chats"
-          titleStyle={{ fontSize: 12, color: "#2C6BED" }}
-          icon={{ name: "timer", type: "ionicon", color: "#2C6BED" }}
-        />
-        <Tab.Item
-          containerStyle={{ backgroundColor: "#fff" }}
-          title="Requested"
-          titleStyle={{ fontSize: 12, color: "#2C6BED" }}
-          icon={{ name: "heart", type: "ionicon", color: "#2C6BED" }}
-        />
-        <Tab.Item
-          containerStyle={{ backgroundColor: "#fff" }}
-          title="Accepted"
-          titleStyle={{ fontSize: 12, color: "#2C6BED" }}
-          icon={{ name: "cart", type: "ionicon", color: "#2C6BED" }}
-        />
-      </Tab>
+    <View style={{ flex: 1 }}>
+      {reqchats?.isloading ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator color={"#2C6BED"} size="large" />
+        </View>
+      ) : (
+        <View>
+          {reqchats?.reqchat?.map(({ id, chat }) => (
+            <RequestedListChatItem
+              id={id}
+              chat={chat}
+              CancelJoin={CancelJoin}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 };
+export const Accepted = ({ navigation }) => {
+  const [acceptedChats, setacceptedChats] = useState({
+    isloading: true,
+    acceptedChat: [],
+  });
 
+  useEffect(() => {
+    const ref = collection(db, "chats");
+    const queryChats = query(
+      ref,
+      where("createdBy", "!=", auth?.currentUser?.uid)
+    );
+    const unsubscribe = onSnapshot(queryChats, (querySnapshot) => {
+      return setacceptedChats({
+        isloading: false,
+        acceptedChat: querySnapshot?.docs
+          ?.map((doc) => {
+            return { id: doc.id, chat: doc.data() };
+          })
+          ?.filter(({ chat }) =>
+            chat?.acceptedRequests.find((id) => id === auth.currentUser.uid)
+          ),
+      });
+    });
+    return unsubscribe;
+  }, []);
+  return (
+    <View>
+      {acceptedChats?.isloading ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator color={"#2C6BED"} size="large" />
+        </View>
+      ) : (
+        <View>
+          {acceptedChats?.acceptedChat?.map(({ id, chat }) => (
+            <AcceptedListChatItem id={id} chat={chat} />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+};
 export default JoinChat;
 const styles = StyleSheet.create({
   container: {

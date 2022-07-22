@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { Avatar, ListItem } from "react-native-elements";
 const UserListItem = ({ id, chat, goToChat }) => {
   console.log("goToChat",chat);
@@ -11,8 +11,8 @@ const UserListItem = ({ id, chat, goToChat }) => {
         containerStyle={{ backgroundColor: "#2C6BED" }}
       />
       <ListItem.Content>
-        <ListItem.Title>{chat?.chatName}</ListItem.Title>
-        <ListItem.Subtitle>{chat?.recent}</ListItem.Subtitle>
+        <ListItem.Title><Text>{chat?.chatName}</Text></ListItem.Title>
+        <ListItem.Subtitle><Text>{chat?.recent}</Text></ListItem.Subtitle>
       </ListItem.Content>
     </ListItem>
   );

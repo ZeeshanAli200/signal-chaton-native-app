@@ -35,7 +35,7 @@ const Login = ({ navigation }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (authuser) => {
       if (authuser) {
-        navigation.replace("Home");
+        navigation.replace("DrawerHome");
       }
     });
 
